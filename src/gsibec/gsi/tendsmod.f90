@@ -151,7 +151,7 @@ if(present(iamroot)) iamroot_=iamroot
 ! load file
 if (present(rcname)) then
    luin=get_lun()
-   open(luin,file=trim(rcname),form='formatted')
+   open(luin,file=trim(rcname),form='formatted', action='read')
 else
    luin=5
 endif

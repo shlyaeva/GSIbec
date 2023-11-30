@@ -134,9 +134,9 @@ logical matched
 if(llinit) return 
 
 if(present(rcname)) then
- open(newunit=luin,file=trim(rcname),form='formatted')
+ open(newunit=luin,file=trim(rcname),form='formatted', action='read')
 else
- open(newunit=luin,file=trim(rcname_def),form='formatted')
+ open(newunit=luin,file=trim(rcname_def),form='formatted', action='read')
 endif
 
 ! Scan file for desired table first

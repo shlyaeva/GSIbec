@@ -5,7 +5,7 @@ integer, parameter :: lu = 10
 real(8) ak(nlev),bk(nlev)
 integer k,iostat
 character(len=80) crec
-    open(lu,file='akbk.txt',form='formatted')
+    open(lu,file='akbk.txt',form='formatted', action='read')
     do k=1,nlev
        read(lu,'(a80)',iostat=iostat) crec
        if (iostat /= 0) exit

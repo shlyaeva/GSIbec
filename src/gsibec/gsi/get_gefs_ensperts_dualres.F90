@@ -812,7 +812,7 @@ subroutine write_spread_dualres(ibin,bundle)
   if (mype==0) then
      lu=get_lun()
      write(grdctl,'(a,2(i3.3,a))') 'ens_spread_',ibin,  '.iter' ,jiter, '.ctl'
-     open(newunit=lu,file=trim(grdctl),form='formatted')
+     open(newunit=lu,file=trim(grdctl),form='formatted', action='read')
      write(lu,'(2a)') 'DSET  ^', trim(grdfile)
      write(lu,'(2a)') 'TITLE ', 'gsi ensemble spread'
      write(lu,'(a,2x,e13.6)') 'UNDEF', 1.E+15 ! any other preference for this?

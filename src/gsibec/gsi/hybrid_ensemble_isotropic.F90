@@ -4102,7 +4102,7 @@ subroutine hybens_localization_setup
 
       inquire(file=trim(fname),exist=lexist)
       if ( lexist ) then 
-         open(lunin,file=trim(fname),form='formatted')
+         open(lunin,file=trim(fname),form='formatted', action='read')
          rewind(lunin)
          read(lunin,100,iostat=istat) msig
          if ( istat /= 0 ) then

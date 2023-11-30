@@ -314,9 +314,9 @@ endif
 ! load file
 luin=get_lun()
 if(present(rcname)) then
-  open(luin,file=trim(rcname),form='formatted')
+  open(luin,file=trim(rcname),form='formatted',action='read')
 else
-  open(luin,file=rcname_def,form='formatted')
+  open(luin,file=rcname_def,form='formatted',action='read')
 endif
 
 ! Scan file for desired table first
