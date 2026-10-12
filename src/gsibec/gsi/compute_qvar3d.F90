@@ -36,7 +36,7 @@ subroutine compute_qvar3d
 !
 !$$$
   use m_kinds, only: r_kind,i_kind,r_single
-  use berror, only: dssv
+  use berror, only: dssv,bsig3d
   use derivsmod, only: qsatg,qgues
   use control_vectors, only: cvars3d
   use gridmod, only: lat2,lon2,nsig
@@ -154,6 +154,7 @@ subroutine compute_qvar3d
               n=min0(max(1,n),maxvarq1)
               np=min0(max(1,np),maxvarq1)
               dssv(i,j,k,nrf3_q)=(varq(n,k)*dn1 + varq(np,k)*dn2)*dssv(i,j,k,nrf3_q)
+              bsig3d(i,j,k,nrf3_q)=(varq(n,k)*dn1 + varq(np,k)*dn2)*bsig3d(i,j,k,nrf3_q)
            end do
         end do
      end do

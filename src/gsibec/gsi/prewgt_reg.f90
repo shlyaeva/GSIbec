@@ -457,6 +457,7 @@ subroutine prewgt_reg(mype)
               dl1=one-dl2
               do k=1,nsig
                  dssv(i,j,k,n)=(dl1*ozmz(l,k)+dl2*ozmz(l2,k))*dsv(1,k,llmin)
+                 bsig3d(i,j,k,n)=(dl1*ozmz(l,k)+dl2*ozmz(l2,k))*as3d(n)
               end do
            end do
         end do
@@ -488,74 +489,95 @@ subroutine prewgt_reg(mype)
                         if (n==nrf3_qr) then
                             if( l_use_cvpqx .and. cvpqx_pval==0.5_r_kind) then
                                  call calc_corz_cld_qr(tsen, cvpqx_pval, corz_cld(i,j,k,1))
-                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,1) * as3d(n)       
+                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,1) * as3d(n)
+                                 bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,1) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==1.0_r_kind) then
                                  call calc_corz_cld_qr(tsen, cvpqx_pval, corz_cld(i,j,k,1))
                                  dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,1) * as3d(n)
+                                 bsig3d(j,i,k,n)=corz_cld(i,j,k,1) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.000001_r_kind) then
                                  call calc_corz_cld_qr(tsen, cvpqx_pval, corz_cld(i,j,k,1))
                                  dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,1) * as3d(n)
+                                 bsig3d(j,i,k,n)=corz_cld(i,j,k,1) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.4_r_kind) then
                                  call calc_corz_cld_qr(tsen, cvpqx_pval, corz_cld(i,j,k,1))
-                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind* corz_cld(i,j,k,1) * as3d(n)     
+                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind* corz_cld(i,j,k,1) * as3d(n)
+                                 bsig3d(j,i,k,n)=0.05_r_kind* corz_cld(i,j,k,1) * as3d(n)
                             else
                               call berror_qcld_tdep(mype,tsen,1,corz_cld(i,j,k,1))
                               dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,1) * as3d(n)
+                              bsig3d(j,i,k,n)=corz_cld(i,j,k,1) * as3d(n)
                             end if
                         else if (n==nrf3_qs) then
                             if( l_use_cvpqx .and. cvpqx_pval==0.5_r_kind) then
                                 call calc_corz_cld_qs(tsen, cvpqx_pval, corz_cld(i,j,k,2))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * 0.05_r_kind*corz_cld(i,j,k,2) *as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,2) *as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==1.0_r_kind) then
                                 call calc_corz_cld_qs(tsen, cvpqx_pval, corz_cld(i,j,k,2))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,2) * as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,2) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.000001_r_kind) then
                                 call calc_corz_cld_qs(tsen, cvpqx_pval, corz_cld(i,j,k,2))
-                                dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,2) * as3d(n)                                   
+                                dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,2) * as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,2) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.4_r_kind) then
                                 call calc_corz_cld_qs(tsen, cvpqx_pval, corz_cld(i,j,k,2))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * 0.05_r_kind*corz_cld(i,j,k,2) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,2) * as3d(n)
                             else
                               call berror_qcld_tdep(mype,tsen,2,corz_cld(i,j,k,2))
                               dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,2) * as3d(n)
+                              bsig3d(j,i,k,n)=corz_cld(i,j,k,2) * as3d(n)
                             end if
                         else if (n==nrf3_qg) then
                             if( l_use_cvpqx .and. cvpqx_pval==0.5_r_kind) then
                                 call calc_corz_cld_qg(tsen, cvpqx_pval, corz_cld(i,j,k,3))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind* corz_cld(i,j,k,3) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind* corz_cld(i,j,k,3) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==1.0_r_kind) then
                                 call calc_corz_cld_qg(tsen, cvpqx_pval, corz_cld(i,j,k,3))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,3) * as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,3) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.000001_r_kind) then
                                 call calc_corz_cld_qg(tsen, cvpqx_pval, corz_cld(i,j,k,3))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,3) * as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,3) * as3d(n)
                             else if( l_use_cvpqx .and. cvpqx_pval==0.4_r_kind) then
                                 call calc_corz_cld_qg(tsen, cvpqx_pval, corz_cld(i,j,k,3))
-                                dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind* corz_cld(i,j,k,3) * as3d(n)                       
+                                dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind* corz_cld(i,j,k,3) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind* corz_cld(i,j,k,3) * as3d(n)
                             else
                               call berror_qcld_tdep(mype,tsen,3,corz_cld(i,j,k,3))
                               dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,3) *as3d(n)
+                              bsig3d(j,i,k,n)=corz_cld(i,j,k,3) *as3d(n)
                             end if
 
                         else if (n==nrf3_qnr) then
                             if( l_cvpnr .and. cvpnr_pval==0.6_r_kind) then   
                                 call calc_corz_cld_qnr(tsen, cvpnr_pval,corz_cld(i,j,k,4))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
                             else if( l_cvpnr .and. cvpnr_pval==1.0_r_kind) then
                                 call calc_corz_cld_qnr(tsen, cvpnr_pval,corz_cld(i,j,k,4))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,4)* as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,4)* as3d(n)
                             else if( l_cvpnr .and. cvpnr_pval==0.000001_r_kind) then
                                 call calc_corz_cld_qnr(tsen, cvpnr_pval,corz_cld(i,j,k,4))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) * corz_cld(i,j,k,4)* as3d(n)
+                                bsig3d(j,i,k,n)=corz_cld(i,j,k,4)* as3d(n)
                             else if( l_cvpnr .and. cvpnr_pval==0.4_r_kind) then
                                 call calc_corz_cld_qnr(tsen, cvpnr_pval,corz_cld(i,j,k,4))
                                 dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
                             else if( l_cvpnr .and. cvpnr_pval==0.2_r_kind) then
                                 call calc_corz_cld_qnr(tsen,cvpnr_pval,corz_cld(i,j,k,4))
-                                dssv(j,i,k,n)=dsv_cld(i,k,j)*0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
                             else if( l_cvpnr .and. cvpnr_pval==0.8_r_kind) then
                                 call calc_corz_cld_qnr(tsen,cvpnr_pval,corz_cld(i,j,k,4))
-                                dssv(j,i,k,n)=dsv_cld(i,k,j)*0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                dssv(j,i,k,n)=dsv_cld(i,k,j) *0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
+                                bsig3d(j,i,k,n)=0.05_r_kind*corz_cld(i,j,k,4) * as3d(n)
                             end if
                         else
                             write(6,*) &
@@ -586,6 +608,7 @@ subroutine prewgt_reg(mype)
                     dl1=one-dl2
                     do k=1,nsig
                         dssv(j,i,k,n)=dl1*dsv(i,k,l)+dl2*dsv(i,k,l2)
+                        bsig3d(j,i,k,n)=(dl1*corz(l,k,n)+dl2*corz(l2,k,n))*as3d(n)
                     enddo
                 end do
             end do

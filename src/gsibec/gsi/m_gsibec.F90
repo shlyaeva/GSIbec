@@ -249,9 +249,11 @@ contains
 !--------------------------------------------------------
   subroutine final_(closempi)
 
+  use m_bsig_balance, only: bsig_balance_final
   logical, intent(in) :: closempi
 
   gsibec_initialized_=.false.
+  call bsig_balance_final()
   call unset_()
   call gsimain_finalize(closempi)
 
@@ -1041,12 +1043,14 @@ contains
   end subroutine final_guess_
 !--------------------------------------------------------
   subroutine get_stddev3_(name, k, sig, ier)
-  ! Return per-(lat2,lon2) standard-deviation slice from berror::bsig3d for
-  ! control variable `name` (short cvars3d name, e.g. 'sf','vp','t','q','oz')
-  ! at level k. `sig` is allocated by this routine with the (lat2,lon2) shape
+  ! Return per-(lat2,lon2) standard-deviation slice for control variable
+  ! `name` (short cvars3d name, e.g. 'sf','vp','t','q','oz') at level k:
+  ! berror::bsig3d, combined with the variance the balance adds to t and vp
+  ! (m_bsig_balance). `sig` is allocated by this routine with the (lat2,lon2) shape
   ! of bsig3d. Returns ier/=0 (and an allocated zero-filled sig sized 1x1) if
   ! name is not in cvars3d or bsig3d is unallocated.
   use berror, only: bsig3d
+  use m_bsig_balance, only: bsig_balance_var3d
   use control_vectors, only: cvars3d
   use mpeu_util, only: getindex
   character(len=*), intent(in)  :: name
@@ -1067,13 +1071,18 @@ contains
      return
   endif
   allocate(sig(size(bsig3d,1), size(bsig3d,2)))
-  sig(:,:) = bsig3d(:,:,k,n)
+  ! Add the variance from the balance (t, vp) to the unbalanced variance
+  sig(:,:) = bsig3d(:,:,k,n)**2
+  call bsig_balance_var3d(name, k, sig)
+  sig = sqrt(sig)
   end subroutine get_stddev3_
 !--------------------------------------------------------
   subroutine get_stddev2_(name, sig, ier)
   ! Same for cvars2d (2D variables): 'ps','sst', plus motley 'land_st','ice_st'
-  ! at indices nc2d+1, nc2d+2 when present.
+  ! at indices nc2d+1, nc2d+2 when present. ps includes the variance added by
+  ! the balance.
   use berror, only: bsig2d
+  use m_bsig_balance, only: bsig_balance_var2d
   use control_vectors, only: cvars2d
   use control_vectors, only: nc2d, mvars
   use mpeu_util, only: getindex
@@ -1114,6 +1123,9 @@ contains
      return
   endif
   allocate(sig(size(bsig2d,1), size(bsig2d,2)))
-  sig(:,:) = bsig2d(:,:,n)
+  ! Add the variance from the balance (ps) to the unbalanced variance
+  sig(:,:) = bsig2d(:,:,n)**2
+  call bsig_balance_var2d(name, sig)
+  sig = sqrt(sig)
   end subroutine get_stddev2_
 end module m_gsibec
