@@ -1080,16 +1080,18 @@ contains
   subroutine get_stddev2_(name, sig, ier)
   ! Same for cvars2d (2D variables): 'ps','sst', plus motley 'land_st','ice_st'
   ! at indices nc2d+1, nc2d+2 when present. ps includes the variance added by
-  ! the balance.
+  ! the balance. For sst, land and sea-ice points take the land_st/ice_st
+  ! values (zero without those motley variables), as bkgvar does.
   use berror, only: bsig2d
   use m_bsig_balance, only: bsig_balance_var2d
   use control_vectors, only: cvars2d
   use control_vectors, only: nc2d, mvars
+  use guess_grids, only: isli2
   use mpeu_util, only: getindex
   character(len=*), intent(in)  :: name
   real(r_kind), allocatable, intent(out) :: sig(:,:)
   integer,          intent(out) :: ier
-  integer :: n
+  integer :: n, i, j
   ier = 0
   if (.not. allocated(bsig2d)) then
      ier = 2
@@ -1127,5 +1129,18 @@ contains
   sig(:,:) = bsig2d(:,:,n)**2
   call bsig_balance_var2d(name, sig)
   sig = sqrt(sig)
+  if (trim(name) == 'sst') then
+     do j = 1, size(sig,2)
+        do i = 1, size(sig,1)
+           if (isli2(i,j) == 1) then
+              sig(i,j) = 0.0_r_kind
+              if (mvars >= 2) sig(i,j) = bsig2d(i,j,nc2d+1)
+           else if (isli2(i,j) == 2) then
+              sig(i,j) = 0.0_r_kind
+              if (mvars >= 2) sig(i,j) = bsig2d(i,j,nc2d+2)
+           end if
+        end do
+     end do
+  end if
   end subroutine get_stddev2_
 end module m_gsibec
