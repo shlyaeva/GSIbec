@@ -76,7 +76,7 @@ subroutine prewgt_reg(mype)
   use m_kinds, only: r_kind,i_kind,r_quad
   use balmod, only: rllat,rllat1,llmin,llmax
   use berror, only: dssvs,&
-       bw,ny,nx,dssv,vs,be,ndeg,&
+       bw,ny,nx,dssv,vs,be,ndeg,bsig3d,bsig2d,&
        init_rftable,hzscl,slw,nhscrf,bkgv_write
   use m_mpimod, only: nvar_id,levs_id,mpi_sum,gsi_mpi_comm_world,mpi_rtype
   !use jfunc, only: varq,qoption,varcw,cwoption
@@ -609,6 +609,8 @@ subroutine prewgt_reg(mype)
               dl1=one-dl2
               do k=1,nsig
                  dssv(j,i,k,n)=dl1*dsv(i,k,l)+dl2*dsv(i,k,l2)
+                 ! Pure σ from the BE table, lat-interpolated, with as3d.
+                 bsig3d(j,i,k,n)=(dl1*corz(l,k,n)+dl2*corz(l2,k,n))*as3d(n)
               enddo
            end do
         end do
@@ -666,9 +668,12 @@ subroutine prewgt_reg(mype)
            dl2=rllat1(j,i)-real(l,r_kind)
            dl1=one-dl2
            dssvs(j,i,n)=dl1*dsvs(i,l)+dl2*dsvs(i,l2)
+           bsig2d(j,i,n)=(dl1*corp(l,n)+dl2*corp(l2,n))*as2d(n)
            if (mvars>=2.and.n==nrf2_sst) then
-              dssvs(j,i,nc2d+1)=atsfc_sdv(1)*as2d(n)  
-              dssvs(j,i,nc2d+2)=atsfc_sdv(2)*as2d(n)  
+              dssvs(j,i,nc2d+1)=atsfc_sdv(1)*as2d(n)
+              dssvs(j,i,nc2d+2)=atsfc_sdv(2)*as2d(n)
+              bsig2d(j,i,nc2d+1)=atsfc_sdv(1)*as2d(n)
+              bsig2d(j,i,nc2d+2)=atsfc_sdv(2)*as2d(n)
            end if
         end do
      end do

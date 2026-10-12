@@ -90,7 +90,7 @@ subroutine prewgt(mype)
        bw,wtxrs,inaxs,inxrs,nr,ny,nx,mr,ndeg,&
        nf,vs,be,dssv,norh,bl2,bl,init_rftable,hzscl,&
        pert_berr,bkgv_flowdep,slw,slw1,slw2,bkgv_write,nhscrf,&
-       adjustozvar,adjustozhscl
+       adjustozvar,adjustozhscl,bsig3d,bsig2d
   use m_berror_stats,only : berror_read_wgt
   use m_mpimod, only: nvar_id,levs_id
   use m_mpimod, only: gsi_mpi_comm_world,ierror,mpi_rtype
@@ -464,18 +464,21 @@ subroutine prewgt(mype)
            do k=1,nsig
               do i=1,lon2
                  dssv(j,i,k,n)=dsv(i,k)*sfvar(j,i,k)*as3d(n)   ! streamfunction
+                 bsig3d(j,i,k,n)=sfvar(j,i,k)*as3d(n)
               end do
            end do
         else if (n==nrf3_vp) then
            do k=1,nsig
               do i=1,lon2
                  dssv(j,i,k,n)=dsv(i,k)*vpvar(j,i,k)*as3d(n)   ! velocity potential
+                 bsig3d(j,i,k,n)=vpvar(j,i,k)*as3d(n)
               end do
            end do
         else if (n==nrf3_t) then
            do k=1,nsig
               do i=1,lon2
                  dssv(j,i,k,n)=dsv(i,k)*tvar(j,i,k)*as3d(n)    ! temperature
+                 bsig3d(j,i,k,n)=tvar(j,i,k)*as3d(n)
               end do
            end do
         else if (n==nrf3_oz.and.adjustozvar) then
@@ -485,8 +488,9 @@ subroutine prewgt(mype)
                  do i=1,lon2
                     my_corz = max(ges_oz(j,i,k),0.000000002_r_kind)
                     ! Reduce weight in the stratosphere
-                    if (my_corz .gt. 0.0000001_r_kind) my_corz = my_corz/4.0 
+                    if (my_corz .gt. 0.0000001_r_kind) my_corz = my_corz/4.0
                     dssv(j,i,k,n)=dsv(i,k)*my_corz*as3d(n)   ! ozone
+                    bsig3d(j,i,k,n)=my_corz*as3d(n)
                  end do
               end do
            else
@@ -496,6 +500,7 @@ subroutine prewgt(mype)
            do k=1,nsig
               do i=1,lon2
                  dssv(j,i,k,n)=dsv(i,k)*corz(jx,k,n)*as3d(n)
+                 bsig3d(j,i,k,n)=corz(jx,k,n)*as3d(n)
               end do
            end do
         end if
@@ -508,18 +513,21 @@ subroutine prewgt(mype)
 !!!$omp parallel do  schedule(dynamic,1) private(i,n,j,jx,ix,loc)
   do n=1,nc2d
      if (n==nrf2_ps) then
-        do j=1,lat2         
+        do j=1,lat2
            do i=1,lon2
               dssvs(j,i,n)=psvar(j,i)*as2d(n)             ! surface pressure
+              bsig2d(j,i,n)=psvar(j,i)*as2d(n)
            end do
         end do
      else if (n==nrf2_sst) then
-        do j=1,lat2         
+        do j=1,lat2
            do i=1,lon2
               if(mvars>=2 .and. isli2(j,i)==1)then
                  dssvs(j,i,nc2d+1)= atsfc_sdv(1)          ! land surface temperature
+                 bsig2d(j,i,nc2d+1)= atsfc_sdv(1)
               else if(mvars>=2 .and. isli2(j,i)==2)then
                  dssvs(j,i,nc2d+2)= atsfc_sdv(2)          ! ice surface temperature
+                 bsig2d(j,i,nc2d+2)= atsfc_sdv(2)
               else
                  jx=istart(mm1)+j-2
                  jx=max(jx,2)
@@ -530,6 +538,7 @@ subroutine prewgt(mype)
                  if (ix==nlon+1) ix=1
                  ix=min(nlon,ix)
                  dssvs(j,i,n)=corsst(jx,ix)*as2d(n)        ! sea surface temperature
+                 bsig2d(j,i,n)=corsst(jx,ix)*as2d(n)
               end if
            end do
         end do

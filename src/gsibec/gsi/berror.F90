@@ -139,6 +139,7 @@ module berror
   public :: ndx,ndy,ndx2,nmix,nymx,nfg,nfnf,norm,nxem
   public :: adjustozvar,adjustozhscl
   public :: dssvs,dssv,bkgv_write,bkgv_rewgtfct,hswgt
+  public :: bsig3d,bsig2d
   public :: hzscl,bw,pert_berr_fct,pert_berr,ndeg,norh,vs
   public :: bl,bl2,be,slw2,slw1,slw,mr,inaxs,wtxrs,wtaxs,nx,ny
   public :: inxrs,jj1,ii2,jj2,ii,jj,ii1,table,alv,nhscrf
@@ -167,6 +168,12 @@ module berror
   real(r_kind),allocatable,dimension(:,:,:):: dssvs
   real(r_kind),allocatable,dimension(:,:,:):: wtaxs,wtxrs,qvar3d
   real(r_kind),allocatable,dimension(:,:,:,:):: alv,dssv
+  ! Pure file-σ (with as3d/as2d amplitude) per (lat2,lon2,nsig,nc3d) and
+  ! (lat2,lon2,nvars-nc3d). Populated alongside dssv/dssvs in prewgt; queried
+  ! by m_gsibec::gsibec_get_stddev to expose σ to JEDI/SABER. Does NOT
+  ! include recursive-filter normalization residuals.
+  real(r_kind),allocatable,dimension(:,:,:,:):: bsig3d
+  real(r_kind),allocatable,dimension(:,:,:)  :: bsig2d
 
   logical pert_berr,bkgv_flowdep,bkgv_write,adjustozvar
   character(len=255) :: bkgv_write_cv,bkgv_write_sv
@@ -314,10 +321,14 @@ contains
   if(nc3d>0)then
      allocate(alv(lat2,ndeg,nsig,nc3d),&
               dssv(lat2,lon2,nsig,nc3d))
+     allocate(bsig3d(lat2,lon2,nsig,nc3d))
+     bsig3d = zero
   endif
   if(nvars-nc3d>0)then
      allocate(dssvs(lat2,lon2,nvars-nc3d))
      dssvs = zero
+     allocate(bsig2d(lat2,lon2,nvars-nc3d))
+     bsig2d = zero
   endif
 #ifdef USE_ALL_ORIGINAL
   allocate(varprd(nrclen))
@@ -374,6 +385,8 @@ contains
     if(allocated(alv))   deallocate(alv)
     if(allocated(dssv))  deallocate(dssv)
     if(allocated(dssvs)) deallocate(dssvs)
+    if(allocated(bsig3d)) deallocate(bsig3d)
+    if(allocated(bsig2d)) deallocate(bsig2d)
 #ifdef USE_ALL_ORIGINAL
     if(allocated(varprd)) deallocate(varprd)
     if(diag_precon)deallocate(vprecond)
@@ -974,9 +987,13 @@ contains
     if(nc3d>0)then
        allocate(alv(llmin:llmax,ndeg,nsig,nc3d), &
             dssv(lat2,lon2,nsig,nc3d))
+       allocate(bsig3d(lat2,lon2,nsig,nc3d))
+       bsig3d = zero
        if(nvars-nc3d>0)then
           allocate(dssvs(lat2,lon2,nvars-nc3d))
           dssvs = zero
+          allocate(bsig2d(lat2,lon2,nvars-nc3d))
+          bsig2d = zero
        endif
     endif
     
@@ -1023,6 +1040,8 @@ contains
     if(allocated(alv)) deallocate(alv)
     if(allocated(dssv)) deallocate(dssv)
     if(allocated(dssvs)) deallocate(dssvs)
+    if(allocated(bsig3d)) deallocate(bsig3d)
+    if(allocated(bsig2d)) deallocate(bsig2d)
     deallocate(ii,jj)
     deallocate(slw)
 #ifdef USE_ALL_ORIGINAL

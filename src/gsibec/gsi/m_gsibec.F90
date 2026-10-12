@@ -82,6 +82,7 @@ public gsibec_sv_space
 public gsibec_befname
 public gsibec_final_guess
 public gsibec_final
+public gsibec_get_stddev
 
 interface gsibec_init
   module procedure init_
@@ -130,6 +131,11 @@ end interface gsibec_final_guess
 interface gsibec_final
   module procedure final_
 end interface gsibec_final
+
+interface gsibec_get_stddev
+  module procedure get_stddev3_
+  module procedure get_stddev2_
+end interface gsibec_get_stddev
 
 logical,save :: gsibec_initialized_ = .false.
 logical,save :: gsibec_iamset_ = .false.
@@ -1033,4 +1039,81 @@ contains
   if(allocated(nhms)) deallocate(nhms)
   call gsiguess_final()
   end subroutine final_guess_
+!--------------------------------------------------------
+  subroutine get_stddev3_(name, k, sig, ier)
+  ! Return per-(lat2,lon2) standard-deviation slice from berror::bsig3d for
+  ! control variable `name` (short cvars3d name, e.g. 'sf','vp','t','q','oz')
+  ! at level k. `sig` is allocated by this routine with the (lat2,lon2) shape
+  ! of bsig3d. Returns ier/=0 (and an allocated zero-filled sig sized 1x1) if
+  ! name is not in cvars3d or bsig3d is unallocated.
+  use berror, only: bsig3d
+  use control_vectors, only: cvars3d
+  use mpeu_util, only: getindex
+  character(len=*), intent(in)  :: name
+  integer,          intent(in)  :: k
+  real(r_kind), allocatable, intent(out) :: sig(:,:)
+  integer,          intent(out) :: ier
+  integer :: n
+  ier = 0
+  if (.not. allocated(bsig3d)) then
+     ier = 2
+     allocate(sig(1,1)); sig = 0.0_r_kind
+     return
+  endif
+  n = getindex(cvars3d, name)
+  if (n <= 0) then
+     ier = 1
+     allocate(sig(size(bsig3d,1), size(bsig3d,2))); sig = 0.0_r_kind
+     return
+  endif
+  allocate(sig(size(bsig3d,1), size(bsig3d,2)))
+  sig(:,:) = bsig3d(:,:,k,n)
+  end subroutine get_stddev3_
+!--------------------------------------------------------
+  subroutine get_stddev2_(name, sig, ier)
+  ! Same for cvars2d (2D variables): 'ps','sst', plus motley 'land_st','ice_st'
+  ! at indices nc2d+1, nc2d+2 when present.
+  use berror, only: bsig2d
+  use control_vectors, only: cvars2d
+  use control_vectors, only: nc2d, mvars
+  use mpeu_util, only: getindex
+  character(len=*), intent(in)  :: name
+  real(r_kind), allocatable, intent(out) :: sig(:,:)
+  integer,          intent(out) :: ier
+  integer :: n
+  ier = 0
+  if (.not. allocated(bsig2d)) then
+     ier = 2
+     allocate(sig(1,1)); sig = 0.0_r_kind
+     return
+  endif
+  if (trim(name) == 'land_st') then
+     if (mvars >= 2 .and. size(bsig2d,3) >= nc2d+1) then
+        allocate(sig(size(bsig2d,1), size(bsig2d,2)))
+        sig(:,:) = bsig2d(:,:,nc2d+1)
+        return
+     endif
+     ier = 3
+     allocate(sig(size(bsig2d,1), size(bsig2d,2))); sig = 0.0_r_kind
+     return
+  endif
+  if (trim(name) == 'ice_st') then
+     if (mvars >= 2 .and. size(bsig2d,3) >= nc2d+2) then
+        allocate(sig(size(bsig2d,1), size(bsig2d,2)))
+        sig(:,:) = bsig2d(:,:,nc2d+2)
+        return
+     endif
+     ier = 3
+     allocate(sig(size(bsig2d,1), size(bsig2d,2))); sig = 0.0_r_kind
+     return
+  endif
+  n = getindex(cvars2d, name)
+  if (n <= 0) then
+     ier = 1
+     allocate(sig(size(bsig2d,1), size(bsig2d,2))); sig = 0.0_r_kind
+     return
+  endif
+  allocate(sig(size(bsig2d,1), size(bsig2d,2)))
+  sig(:,:) = bsig2d(:,:,n)
+  end subroutine get_stddev2_
 end module m_gsibec
